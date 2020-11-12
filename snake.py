@@ -9,7 +9,6 @@ class Snake:
         self.size = 40
         self.vx = vx
         self.vy = vy
-        self.lenght_mulltiplier = 1 #  when the snake ate an apple increases by 1
         self.posx = posx
         self.posy = posy
         self.shape = canvas.create_rectangle(self.posx,
@@ -43,13 +42,20 @@ class Snake:
         
     def check_collision(self):
         '''will must recognize the touch of the apple by the snake'''
-        global speed_multiplier
+        global speed_multiplier, tail
         if self.posx == apple.posx and self.posy == apple.posy:
             canvas.delete(apple.shape)
+            if snake.vx == 40:
+                tail = Snake(snake.posx-40*speed_multiplier, snake.posy, snake.vx, snake.vy)
+            elif snake.vx == -40:
+                tail = Snake(snake.posx+40*speed_multiplier, snake.posy, snake.vx, snake.vy)
+            elif snake.vy == 40:
+                tail = Snake(snake.posx, snake.posy-40*speed_multiplier, snake.vx, snake.vy)
+            elif snake.vy == -40:
+                tail = Snake(snake.posx, snake.posy+40*speed_multiplier, snake.vx, snake.vy)
+            snakes.append(tail)
             apple.__init__()
-            speed_multiplier += 1
-            
-            
+            speed_multiplier += 1  
 
 
     def up(self, event=None):
@@ -84,22 +90,25 @@ class Apple:
 
 def refresh():
     """Set the snake`s speed, by increasing by 100 each 3 eatten apples"""
-    root.after(500, snake.move)
-    root.after(500, snake.check_collision)
-    lambda speed_multiplier: speed_multiplier % 3 == 1, root.after(500-40*speed_multiplier, refresh)
-    #need to fix, when speed multiplier rises value % 3 == 1, every recal this fuction increses the snake`s speed
+    for i in snakes:
+        root.after(snake_speed, i.move)
+        root.after(snake_speed, i.check_collision)
+    root.after(snake_speed, refresh)
+    
      
 
 def main():
-    global canvas, root, snake, positions, apple, speed_multiplier
+    global canvas, root, snake, positions, apple, speed_multiplier, snake_speed, snakes
     root = tk.Tk()
     speed_multiplier = 1
+    snake_speed = 500
     positions = [40*i for i in range(1,12)]
     posx, posy = choice(positions), choice(positions)
     canvas = tk.Canvas(root, width=480, height=480)
     canvas.pack()    
     apple = Apple()
     snake = Snake(posx, posy, 0, 0)
+    snakes = [snake]
     root.bind('<Down>', snake.down)
     root.bind('<Up>', snake.up)
     root.bind('<Left>', snake.left)

@@ -12,10 +12,28 @@ class Snake:
         self.posx = posx
         self.posy = posy
         self.shape = canvas.create_rectangle(self.posx,
-                                          self.posy,
-                                          self.posx + self.size,
-                                          self.posy + self.size,
-                                          fill = 'green')
+                                             self.posy,
+                                             self.posx + self.size,
+                                             self.posy + self.size,
+                                             fill = 'green')
+
+    def body(self, body_x, body_y):
+        global body_array
+        self.tail = canvas.create_rectangle(body_x,
+                                            body_y,
+                                            body_x + self.size,
+                                            body_y + self.size,
+                                            fill = 'green')
+        body_array.append(speed_multiplier)
+
+    def delete_tail(self):
+        canvas.delete(snake.tail)
+        snake.body(snake.posx, snake.posy)
+
+    def move_body(self):
+        root.after(snake_speed, snake.delete_tail)
+        
+            
 
     def check_boarders(self):
         '''replaces the snake to the opposite boarder if the field is over'''
@@ -42,20 +60,21 @@ class Snake:
         
     def check_collision(self):
         '''will must recognize the touch of the apple by the snake'''
-        global speed_multiplier, tail
+        global speed_multiplier
+        snakes = []
         if self.posx == apple.posx and self.posy == apple.posy:
             canvas.delete(apple.shape)
             if snake.vx == 40:
-                tail = Snake(snake.posx-40*speed_multiplier, snake.posy, snake.vx, snake.vy)
+                snake.body(snake.posx-40*speed_multiplier, snake.posy)
             elif snake.vx == -40:
-                tail = Snake(snake.posx+40*speed_multiplier, snake.posy, snake.vx, snake.vy)
+                snake.body(snake.posx+40*speed_multiplier, snake.posy)
             elif snake.vy == 40:
-                tail = Snake(snake.posx, snake.posy-40*speed_multiplier, snake.vx, snake.vy)
+                snake.body(snake.posx, snake.posy-40*speed_multiplier)
             elif snake.vy == -40:
-                tail = Snake(snake.posx, snake.posy+40*speed_multiplier, snake.vx, snake.vy)
-            snakes.append(tail)
+                snake.body(snake.posx, snake.posy+40*speed_multiplier)
             apple.__init__()
-            speed_multiplier += 1  
+            speed_multiplier += 1
+            
 
 
     def up(self, event=None):
@@ -90,17 +109,19 @@ class Apple:
 
 def refresh():
     """Set the snake`s speed, by increasing by 100 each 3 eatten apples"""
-    for i in snakes:
-        root.after(snake_speed, i.move)
-        root.after(snake_speed, i.check_collision)
+    root.after(snake_speed, snake.move)
+    root.after(snake_speed, snake.check_collision)
+    root.after(snake_speed, snake.move_body)
     root.after(snake_speed, refresh)
+    
     
      
 
 def main():
-    global canvas, root, snake, positions, apple, speed_multiplier, snake_speed, snakes
+    global body_array, canvas, root, snake, positions, apple, speed_multiplier, snake_speed, snakes
     root = tk.Tk()
     speed_multiplier = 1
+    body_array = []
     snake_speed = 500
     positions = [40*i for i in range(1,12)]
     posx, posy = choice(positions), choice(positions)
@@ -108,7 +129,6 @@ def main():
     canvas.pack()    
     apple = Apple()
     snake = Snake(posx, posy, 0, 0)
-    snakes = [snake]
     root.bind('<Down>', snake.down)
     root.bind('<Up>', snake.up)
     root.bind('<Left>', snake.left)

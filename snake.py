@@ -3,6 +3,50 @@ from random import *
 import time
 import math
 
+global canvas, root, snake, apple, speed_multiplier, snake_speed, body, x_positions, y_positions
+X_POSITIONS = [40 * i for i in range(1, 12)]
+Y_POSITIONS = [40 * i for i in range(1, 12)]
+
+
+
+
+class Game:  
+    def main():
+        speed_multiplier = 1
+        snake_speed = 100 + round(500*1.2**(-speed_multiplier))
+        place = []        
+        for x in X_POSITIONS:
+            for y in Y_POSITIONS:
+                place.append((x,y))        
+        snake = Snake(choice(place), 0, 0)
+        body = [Body((snake.pos_x - snake.size, snake.pos_y))]
+        apple = Apple(choice(place))
+        root.bind('<Down>', snake.down)
+        root.bind('<Up>', snake.up)
+        root.bind('<Left>', snake.left)
+        root.bind('<Right>', snake.right)
+
+    def refresh():
+        if snake.vx != 0 or snake.vy != 0:
+            for i in range(len(body)-1, -1, -1):
+                if not i:
+                    body[i].pos_x = snake.pos_x
+                    body[i].pos_y = snake.pos_y
+                else:
+                    body[i].pos_x = body[i - 1].pos_x
+                    body[i].pos_y = body[i - 1].pos_y
+            root.after(snake_speed, snake.move)
+            root.after(snake_speed, snake.check_collision)
+            for i in body:
+                root.after(snake_speed, i.set_body_coords)
+        root.after(snake_speed, game.refresh)
+    
+    def game_over():
+        canvas.delete(tk.ALL)
+        canvas.create_text(240, 240, text='GAME OVER', font=72)
+        root.after(2000, root.destroy)
+
+
 
 class Snake:
     def __init__(self, scoords, vx, vy):
@@ -22,7 +66,7 @@ class Snake:
                                              fill='green')
 
     def set_coords(self):
-        canvas.coords(self.shape,
+        Game.canvas.coords(self.shape,
                       self.pos_x,
                       self.pos_y,
                       self.pos_x + self.size,
@@ -56,7 +100,7 @@ class Snake:
         refreshing the free parts of the field for the new apples and increasing the snake speed
         '''
         global speed_multiplier, body, i, snake_speed, place
-        new_places = list(place)
+        new_places = list(Game.place)
         if self.pos_x == apple.pos_x and self.pos_y == apple.pos_y:
             speed_multiplier += 1
             snake_speed = 100 + round(500 * 1.2 ** (-speed_multiplier))
@@ -69,7 +113,7 @@ class Snake:
             apple.__init__(choice(new_places))
         for i in body:
             if i.pos_x == self.pos_x and i.pos_y == self.pos_y:
-                game_over()
+                Game.game_over()
 
     def up(self, event=None):
         if -40 < self.vy < 40:
@@ -119,7 +163,7 @@ class Apple:
                                              fill='red')
 
 
-def refresh():
+'''def refresh():
     if snake.vx != 0 or snake.vy != 0:
         for i in range(len(body)-1, -1, -1):
             if not i:
@@ -130,15 +174,14 @@ def refresh():
                 body[i].pos_y = body[i - 1].pos_y
         root.after(snake_speed, snake.move)
         root.after(snake_speed, snake.check_collision)
-        if body:
-            for i in body:
-                root.after(snake_speed, i.set_body_coords)
+        for i in body:
+            root.after(snake_speed, i.set_body_coords)
     root.after(snake_speed, refresh)
 
 
 def game_over():
     canvas.delete(tk.ALL)
-    canvas.create_text(240, 240, text='GAME OVER', font=72, anchor='center')
+    canvas.create_text(240, 240, text='GAME OVER', font=72)
     root.after(2000, root.destroy)
 
 
@@ -154,7 +197,7 @@ def main():
         for y in y_positions:
             place.append((x,y))
     canvas = tk.Canvas(root, width=480, height=480)
-    canvas.pack()
+    canvas.pack(fill=tk.BOTH)
     snake = Snake(choice(place), 0, 0)
     body = [Body((snake.pos_x - snake.size, snake.pos_y))]
     apple = Apple(choice(place))
@@ -163,6 +206,15 @@ def main():
     root.bind('<Left>', snake.left)
     root.bind('<Right>', snake.right)
     refresh()
+    root.mainloop()'''
+
+def main():
+    global canvas, root
+    root = tk.Tk()
+    canvas = tk.Canvas(root, width=480, height=480)
+    canvas.pack()
+    Game.main()
+    Game.refresh()
     root.mainloop()
 
 
